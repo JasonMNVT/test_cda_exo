@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Site de vente de voiture
+{% endblock %}
+
+{% block body %}
+	<div class="marques-container">
+		<div class="marques">
+			<h3 class="h3">Trouvez la voiture de vos rêves</h3>
+			<table class="table">
+				<tbody>
+					{% for marque in marques %}
+						<tr>
+							<td>
+								<a href="{{ path('card', {'id':marque.id}) }}">{{ marque.name }}</a>
+							</td>
+						</tr>
+					{% else %}
+						<tr>
+							<td colspan="3">no records found</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="cards-container">
+		<div class="cards">
+			{% for annonce in annonces %}
+				<div class="card" style="width: 18rem;">
+					<img class="card-img-top" src="{{asset('images_directory/' ~ annonce.imgfile )}}" alt="Card image cap">
+					<div class="card-body">
+						<h5 class="card-title">
+							{{annonce.marque.name}}
+						</h5>
+						<p class="card-text">
+							{{annonce.description}}
+						</p>
+						<a href="{{ path('app_annonce_show', {'id': annonce.id}) }}" class="btn btn-success">Voir l'annonce</a>
+					</div>
+				</div>
+			{% else %}
+				<tr>
+					<td colspan="3">no records found</td>
+				</tr>
+			{% endfor %}
+		</div>
+	</div>
+{% endblock %}
