@@ -91,7 +91,7 @@ class AnnonceController extends AbstractController
             return $this->redirectToRoute('home');
         }
 
-        if ($author->getRoles() == 'ROLE_ADMIN' or $annonce->getAuthor() == $author) {
+        if ($this->container->get('security.authorization_checker')->IsGranted('ROLE_ADMIN') or $annonce->getAuthor() == $author) {
             if ($form->isSubmitted() && $form->isValid()) {
                 $imageFile = $form->get('imgfile')->getData();
 
@@ -131,14 +131,14 @@ class AnnonceController extends AbstractController
             $this->addFlash('Erreur', 'Vous devez avoir un compte pour supprimer une annonce');
             return $this->redirectToRoute('home');
         }
-        if ($author->getRoles() == 'ROLE_ADMIN' or $annonce->getAuthor() == $author) {
-            $annonce->getisVisible(false);
+        if ($this->container->get('security.authorization_checker')->IsGranted('ROLE_ADMIN') or $annonce->getAuthor() == $author) {
+            $annonce->setIsVisible(false);
             $annonceRepository->save($annonce);
+            $this->addFlash('Succès', 'Votre événement a bien été supprimé !');
         } else {
             $this->addFlash('Erreur', 'Vous n\'êtes pas l\'auteur de cette annonce !');
             return $this->redirectToRoute('app_annonce_show', ['id' => $annonce->getId()]);
         }
-        $this->addFlash('Succès', 'Votre événement a bien été supprimé !');
 
         return $this->redirectToRoute('home', [], Response::HTTP_SEE_OTHER);
     }

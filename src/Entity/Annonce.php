@@ -35,9 +35,6 @@ class Annonce
     #[ORM\Column(length: 255)]
     private ?string $fuel = null;
 
-    #[ORM\Column]
-    private ?bool $license = null;
-
     #[ORM\Column(length: 255)]
     private ?string $imgfile = null;
 
@@ -49,6 +46,9 @@ class Annonce
 
     #[ORM\ManyToOne(inversedBy: 'annonces')]
     private ?User $author = null;
+
+    #[ORM\Column]
+    private ?bool $license = null;
 
     public function getId(): ?int
     {
@@ -139,18 +139,6 @@ class Annonce
         return $this;
     }
 
-    public function getLicense(): ?int
-    {
-        return $this->license;
-    }
-
-    public function setLicense(int $license): self
-    {
-        $this->license = $license;
-
-        return $this;
-    }
-
     public function getImgfile(): ?string
     {
         return $this->imgfile;
@@ -195,6 +183,18 @@ class Annonce
     public function setAuthor(?User $author): self
     {
         $this->author = $author;
+
+        return $this;
+    }
+
+    public function isLicense(): ?bool
+    {
+        return $this->license;
+    }
+
+    public function setLicense(bool $license): self
+    {
+        $this->license = $license;
 
         return $this;
     }
