@@ -20,6 +20,18 @@
 							<td colspan="3">no records found</td>
 						</tr>
 					{% endfor %}
+					{% if app.user %}
+						<div class="text-center mt-3">
+							<a href="{{ path('app_annonce_new') }}" class="btn btn-success">Ajouter une nouvelle annonce</a>
+						</div>
+					{% endif %}
+
+					{% if is_granted('ROLE_ADMIN') %}
+						<div class="text-center mt-3">
+							<a class="btn btn-warning" href="{{ path('app_annonce_index')}}">Liste des annonces</a>
+							<a class="btn btn-warning" href="{{ path('app_marque_index')}}">Liste des marques</a>
+						</div>
+					{% endif %}
 				</tbody>
 			</table>
 		</div>

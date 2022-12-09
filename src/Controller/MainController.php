@@ -16,7 +16,9 @@ class MainController extends AbstractController
     {
         return $this->render('main/index.html.twig', [
             'controller_name' => 'MainController',
-            'annonces' => $annonceRepository->findAll(),
+            'annonces' => $annonceRepository->findBy([
+                'is_visible' => true
+            ]),
             'marques' => $marqueRepository->findAll(),
         ]);
     }

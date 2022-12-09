@@ -10,12 +10,14 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/annonce')]
 class AnnonceController extends AbstractController
 {
     #[Route('/', name: 'app_annonce_index', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function index(AnnonceRepository $annonceRepository): Response
     {
         return $this->render('annonce/index.html.twig', [
@@ -51,9 +53,10 @@ class AnnonceController extends AbstractController
             }
             $annonce->setAuthor($author);
             $annonce->setIsVisible(true);
-            $annonceRepository->add($annonce, true);
-            return $this->redirectToRoute('home', [], Response::HTTP_SEE_OTHER);
+            $annonceRepository->save($annonce, true);
+            return $this->redirectToRoute('app_annonce_index', [], Response::HTTP_SEE_OTHER);
         }
+
         return $this->renderForm('annonce/new.html.twig', [
             'annonce' => $annonce,
             'form' => $form,
@@ -69,30 +72,74 @@ class AnnonceController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_annonce_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Annonce $annonce, AnnonceRepository $annonceRepository): Response
+    public function edit($id, Request $request, Annonce $annonce, AnnonceRepository $annonceRepository, SluggerInterface $slugger): Response
     {
+        $thisAnnonce = $annonceRepository->find($id);
+
         $form = $this->createForm(AnnonceType::class, $annonce);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $annonceRepository->save($annonce, true);
-
-            return $this->redirectToRoute('app_annonce_index', [], Response::HTTP_SEE_OTHER);
+        if ($thisAnnonce->getisVisible() == false) {
+            $this->addFlash('Erreur', 'Cette annonce n\'existe plus');
+            return $this->redirectToRoute('home');
+        }
+        $form = $this->createForm(AnnonceType::class, $annonce);
+        $form->handleRequest($request);
+        $author = $this->getUser();
+        if ($author == false) {
+            $this->addFlash('Erreur', 'Vous devez avoir un compte pour ajouter une annonce');
+            return $this->redirectToRoute('home');
         }
 
-        return $this->renderForm('annonce/edit.html.twig', [
-            'annonce' => $annonce,
-            'form' => $form,
-        ]);
+        if ($author->getRoles() == 'ROLE_ADMIN' or $annonce->getAuthor() == $author) {
+            if ($form->isSubmitted() && $form->isValid()) {
+                $imageFile = $form->get('imgfile')->getData();
+
+                if ($imageFile) {
+                    $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    // this is needed to safely include the file name as part of the URL
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename . '-' . uniqid() . '.' . $imageFile->guessExtension();
+                    try {
+                        $imageFile->move(
+                            $this->getParameter('images_directory'),
+                            $newFilename
+                        );
+                    } catch (FileException $e) {
+                        // ... handle exception if something happens during file upload
+                    }
+                    $annonce->setImgfile($newFilename);
+                }
+                $annonceRepository->save($annonce, true);
+                $this->addFlash('Succès', 'Votre annonce a bien été modifié');
+                return $this->redirectToRoute('app_annonce_index', [], Response::HTTP_SEE_OTHER);
+            }
+            return $this->renderForm('annonce/edit.html.twig', [
+                'annonce' => $annonce,
+                'form' => $form,
+            ]);
+        }
+        $this->addFlash('Erreur', 'Vous devez avoir un compte pour ajouter/éditer une annonce');
+        return $this->redirectToRoute('home');
     }
 
     #[Route('/{id}', name: 'app_annonce_delete', methods: ['POST'])]
     public function delete(Request $request, Annonce $annonce, AnnonceRepository $annonceRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete' . $annonce->getId(), $request->request->get('_token'))) {
-            $annonceRepository->remove($annonce, true);
+        $author = $this->getUser();
+        if ($author == false) {
+            $this->addFlash('Erreur', 'Vous devez avoir un compte pour supprimer une annonce');
+            return $this->redirectToRoute('home');
         }
+        if ($author->getRoles() == 'ROLE_ADMIN' or $annonce->getAuthor() == $author) {
+            $annonce->getisVisible(false);
+            $annonceRepository->save($annonce);
+        } else {
+            $this->addFlash('Erreur', 'Vous n\'êtes pas l\'auteur de cette annonce !');
+            return $this->redirectToRoute('app_annonce_show', ['id' => $annonce->getId()]);
+        }
+        $this->addFlash('Succès', 'Votre événement a bien été supprimé !');
 
-        return $this->redirectToRoute('app_annonce_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('home', [], Response::HTTP_SEE_OTHER);
     }
 }
