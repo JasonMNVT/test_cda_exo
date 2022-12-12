@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\AnnonceRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -49,6 +51,14 @@ class Annonce
 
     #[ORM\Column]
     private ?bool $license = null;
+
+    #[ORM\OneToMany(mappedBy: 'annonces', targetEntity: AnnonceListByUser::class)]
+    private Collection $usersFav;
+
+    public function __construct()
+    {
+        $this->usersFav = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -197,5 +207,47 @@ class Annonce
         $this->license = $license;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, AnnonceListByUser>
+     */
+    public function getUsersFav(): Collection
+    {
+        return $this->usersFav;
+    }
+
+    public function addUsersFav(AnnonceListByUser $usersFav): self
+    {
+        if (!$this->usersFav->contains($usersFav)) {
+            $this->usersFav->add($usersFav);
+            $usersFav->setAnnonces($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUsersFav(AnnonceListByUser $usersFav): self
+    {
+        if ($this->usersFav->removeElement($usersFav)) {
+            // set the owning side to null (unless already changed)
+            if ($usersFav->getAnnonces() === $this) {
+                $usersFav->setAnnonces(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param User $user
+     * @return boolean
+     */
+    public function isUsersFav (User $user): bool
+    {
+        foreach($this->usersFav as $usersFav) {
+            if($usersFav ->getUsers() === $user) return true;
+        }
+        return false;
     }
 }

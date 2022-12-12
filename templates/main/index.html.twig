@@ -43,12 +43,23 @@
 					<img class="card-img-top" src="{{asset('images_directory/' ~ annonce.imgfile )}}" alt="Card image cap">
 					<div class="card-body">
 						<h5 class="card-title">
-							{{annonce.marque.name}}
+							{{annonce.title}}
 						</h5>
 						<p class="card-text">
-							{{annonce.description}}
+							{{annonce.description|raw}}
 						</p>
 						<a href="{{ path('app_annonce_show', {'id': annonce.id}) }}" class="btn btn-success">Voir l'annonce</a>
+						{% if app.user %}
+							{% if annonce.isUsersFav(app.user) %}
+								<a href="{{ path('app_annonce_fav', {'id': annonce.id}) }}" class="btn btn-success">
+									<i class="fa-solid fa-heart"></i>
+								</a>
+							{% else %}
+								<a href="{{ path('app_annonce_fav', {'id': annonce.id}) }}" class="btn btn-success">
+									<i class="fa-regular fa-heart"></i>
+								</a>
+							{% endif %}
+						{% endif %}
 					</div>
 				</div>
 			{% else %}

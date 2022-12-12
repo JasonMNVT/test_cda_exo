@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Annonce;
+use App\Entity\AnnonceListByUser;
 use App\Form\AnnonceType;
+use App\Repository\AnnonceListByUserRepository;
 use App\Repository\AnnonceRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -141,5 +143,32 @@ class AnnonceController extends AbstractController
         }
 
         return $this->redirectToRoute('home', [], Response::HTTP_SEE_OTHER);
+    }
+
+    #[Route('/{id}/fav', name: 'app_annonce_fav', methods: ['GET', 'POST'])]
+    public function favUserAnnonce(Annonce $annonce, AnnonceListByUserRepository $annonceByUserRepo): Response
+    {
+        $user = $this->getUser();
+        if (!$user) return $this->redirectToRoute('app_login');
+
+        if ($annonce->isUsersFav($user)) {
+            $signedUp = $annonceByUserRepo->findOneBy([
+                'annonces' => $annonce,
+                'users' => $user
+            ]);
+            $annonceByUserRepo->remove($signedUp);
+            $this->addFlash('Erreur', "Cette annonce n'est plus dans vos favoris");
+
+            return $this->redirectToRoute('home');
+        }
+
+        $newFav = new AnnonceListByUser();
+        $newFav->setAnnonces($annonce)
+            ->setUsers($user);
+
+        $annonceByUserRepo->save($newFav);
+        $this->addFlash('Succès', "Cette annonce est désormais dans vos favoris");
+
+        return $this->redirectToRoute('home');
     }
 }
