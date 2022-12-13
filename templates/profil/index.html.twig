@@ -49,7 +49,8 @@
 	<div class="cards-container">
 		<div class="cards">
 			{% for annonce in annoncesFav %}
-				<div class="card" style="width: 18rem;">
+				<div
+					class="card" style="width: 18rem;">
 					{# <img class="card-img-top" src="{{asset('images_directory/' ~ annonce.annonces.imgfile )}}" alt="Card image cap"> #}
 					<img class="card-img-top" src="{{asset(annonce.annonces.imgfile )}}" alt="Card image cap">
 					<div class="card-body">
