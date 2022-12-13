@@ -54,6 +54,21 @@ class AnnonceController extends AbstractController
                 $annonce->setImgfile($newFilename);
             }
             $annonce->setAuthor($author);
+            // Tableau de lettre en majuscule
+            $lettres = range('A', 'Z');
+            // Je mélange
+            shuffle($lettres);
+            // J'extrait le premier item du tableau
+            $lettre = array_shift($lettres);
+            // Je recommence pour la seconde lettre
+            shuffle($lettres);
+            // J'extrait la seconde lettre
+            $lettre .= array_shift($lettres);
+            // Un nombre sur 4 digits au hasard
+            $nombre = mt_rand(1000, 9999);
+            
+            $ref = $lettre.$nombre;
+            $annonce->setReference($ref);
             $annonce->setIsVisible(true);
             $annonceRepository->save($annonce, true);
             return $this->redirectToRoute('app_annonce_index', [], Response::HTTP_SEE_OTHER);

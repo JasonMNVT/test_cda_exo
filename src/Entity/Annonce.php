@@ -55,6 +55,9 @@ class Annonce
     #[ORM\OneToMany(mappedBy: 'annonces', targetEntity: AnnonceListByUser::class)]
     private Collection $usersFav;
 
+    #[ORM\Column(length: 255)]
+    private ?string $reference = null;
+
     public function __construct()
     {
         $this->usersFav = new ArrayCollection();
@@ -249,5 +252,17 @@ class Annonce
             if($usersFav ->getUsers() === $user) return true;
         }
         return false;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
     }
 }
